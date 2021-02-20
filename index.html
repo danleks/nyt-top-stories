@@ -73,21 +73,28 @@
 <script src="https://unpkg.com/masonry-layout@4/dist/masonry.pkgd.js"></script>
 
 <script defer>
-    const API_ENDPOINT = 'https://api.nytimes.com/svc/topstories/v2/science.json?api-key=AINpmvoATiEZoSNjlGx6LqMU6TyXwKpq';
+    const key = 'AINpmvoATiEZoSNjlGx6LqMU6TyXwKpq';
+    const API_ENDPOINT = `https://api.nytimes.com/svc/topstories/v2/science.json?api-key=${key}`;
     const app = document.querySelector('#app');
-    let articlesMarkup = '';
 
-    const getTopStories = () => {
-        fetch(API_ENDPOINT)
-            .then(response => {
-                if (response.ok) {
-                    return response.json();
-                } else {
-                    return Promise.reject(response)
-                }
-            })
-            .then(data => {
-                articlesMarkup = data.results.map(({ title, abstract, multimedia, short_url: URL, des_facet: tags }) => {
+    const handleLayout = () => {
+        // Masonry layout
+        const grid = document.querySelector('.grid');
+        const msnry = new Masonry( grid, {
+        // options
+        itemSelector: '.grid-item',
+        columnWidth: '.grid-sizer',
+        gutter: 40,
+        percentPosition: true
+        });
+        imagesLoaded( grid ).on( 'progress', function() {
+        // layout Masonry after each image loads
+        msnry.layout();
+        });    
+    };
+
+    const render = (articles) => {
+        let articlesMarkup = articles.map(({ title, abstract, multimedia, short_url: URL, des_facet: tags }) => {
                    return `
                         <article class='grid-item article'>
                             <h2 class='article__title'>
@@ -100,30 +107,28 @@
                         </article>
                    `
                }).join('');
-               app.innerHTML += `<div class='grid articles'>
-                <div class='grid-sizer'></div>
-                    ${articlesMarkup}
-                </div>`;  
 
-                // Masonry layout
-                const grid = document.querySelector('.grid');
-                const msnry = new Masonry( grid, {
-                // options
-                itemSelector: '.grid-item',
-                columnWidth: '.grid-sizer',
-                gutter: 40,
-                percentPosition: true
-                });
-                imagesLoaded( grid ).on( 'progress', function() {
-                // layout Masonry after each image loads
-                msnry.layout();
-                });    
-                console.log(data.results);     
-            });
+        app.innerHTML +=`
+            <div class='grid articles'>
+            <div class='grid-sizer'></div>
+                ${articlesMarkup}
+            </div>
+        `;
+
+        handleLayout();               
     };
 
-    getTopStories();
+    const getTopStories = () => {
+        fetch(API_ENDPOINT)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    return Promise.reject(response)
+                }
+            })
+            .then(data => render(data.results));
+    };
 
-    var elem = document.querySelector('.grid');
-    
+    getTopStories();    
 </script>
