@@ -15,7 +15,8 @@
         display: flex;
         flex-wrap: wrap;
         gap: 20px;
-        margin-bottom: 40px;
+        max-width: 1200px;
+        margin: 0 auto 40px;
     }
 
     .topics__item {
@@ -109,7 +110,13 @@
     const articles = document.querySelector('.articles');
     const topics = document.querySelector('.topics');
     const loader = document.querySelector('.loader');
-    const NYT_API_SECTIONS = ['arts', 'automobiles', 'business', 'food', 'home', 'insider', 'magazine', 'movies', 'nyregion', 'obituaries', 'opinion', 'politics', 'realestate', 'science', 'sports', 'sundayreview', 'technology', 'theater', 't-magazine', 'upshot', 'us', 'world'];
+    const NYT_API_TOPICS = ['arts', 'automobiles', 'business', 'food', 'home', 'insider', 'magazine', 'movies', 'nyregion', 'obituaries', 'opinion', 'politics', 'realestate', 'science', 'sports', 'sundayreview', 'technology', 'theater', 't-magazine', 'upshot', 'us', 'world'];
+
+    const sanitizeHTML = (str) => {
+        return str.replace(/[^\w. ]/gi, (c) => {
+		    return '&#' + c.charCodeAt(0) + ';';
+	    });
+    };
 
     const handleLayout = (articlesMarkup) => {
         if (articlesMarkup) {
@@ -143,12 +150,12 @@
                    return `
                         <article class='grid-item article'>
                             <h2 class='article__title'>
-                               ${title}
+                               ${sanitizeHTML(title)}
                             </h2>
-                            <div class='article__tags'>${tags.map(tag => `<span>${tag}</span>`).join('')}</div>
-                            <img class='article__img' src=${multimedia[0].url} alt=${multimedia[0].caption}/>
-                            <p class='article__content'>${abstract}</p>
-                            <a class='article__link' href=${URL} target="_blank" rel="noopener noreferrer">Full article</a>
+                            <div class='article__tags'>${tags.map(tag => `<span>${sanitizeHTML(tag)}</span>`).join('')}</div>
+                            <img class='article__img' src=${sanitizeHTML(multimedia[0].url)} alt=${sanitizeHTML(multimedia[0].caption)}/>
+                            <p class='article__content'>${sanitizeHTML(abstract)}</p>
+                            <a class='article__link' href=${sanitizeHTML(URL)} target="_blank" rel="noopener noreferrer">Full article</a>
                         </article>
                    `
                }).join('');
@@ -157,18 +164,17 @@
 
     const renderTopics = (currTopic) => {
         let topicsList = '';
-        NYT_API_SECTIONS.forEach(topic => {
+        NYT_API_TOPICS.forEach(topic => {
             topicsList += `
                 <span class='${currTopic === topic ? 'topics__item active' : 'topics__item'}'>${topic}</span>
             `;
         })
         topics.innerHTML = topicsList; 
         
-        window.addEventListener('click', (e) => {
+        topics.addEventListener('click', (e) => {
             if (e.target.className === 'topics__item') {
                 getTopStories(e.target.textContent);
                 const activeTopic = document.querySelector('.active');
-                console.log(activeTopic);
                 if (activeTopic !== null) {
                     activeTopic.classList.remove('active');
                 }
